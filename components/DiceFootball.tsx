@@ -159,7 +159,7 @@ const DiceFootball = () => {
                 '--end-y': `${dice.finalY}px`,
                 transform: `translate(-50%, 0) translate(${dice.startX}px, ${dice.startY}px)`,
                 animation: `${dice.landingZone === 'off' ? 'rollOff' : 'rollAcross'} 2s forwards`
-              }}
+              } as React.CSSProperties}
             >
               {getDiceIcon(dice.value)}
             </div>
