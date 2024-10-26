@@ -9,6 +9,11 @@
 .dice {
   transform-style: preserve-3d;
   will-change: transform;
+  transition: transform 0.2s ease-out;
+}
+
+.dice.dragging {
+  transform: scale(1.1);
 }
 
 @keyframes rollAcross {
@@ -34,9 +39,7 @@
               rotateX(540deg) rotateZ(270deg);
   }
   100% {
-    transform: translate(-50%, 0) 
-              translate(var(--end-x), var(--end-y)) 
-              rotateX(720deg) rotateZ(360deg);
+    transform: translate(-50%, 0) translate(var(--end-x), var(--end-y)) rotateX(720deg) rotateZ(360deg);
   }
 }
 

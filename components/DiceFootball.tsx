@@ -3,15 +3,28 @@
 import React, { useState } from 'react';
 import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from 'lucide-react';
 
-interface DicePosition {
+type GestureState = {
+  startY: number;
+  startTime: number;
+  isDragging: boolean;
+};
+
+type RollResult = {
+  velocity: number;
+  distance: number;
+  landingZone: 'short' | 'field' | 'endzone' | 'touchdown' | 'off';
+};
+
+type DicePosition = {
   value: number;
   startX: number;
   startY: number;
   finalX: number;
   finalY: number;
   isRolling: boolean;
-  landingZone: string;
-}
+  landingZone: RollResult['landingZone'];
+  velocity: number;
+};
 
 const DiceFootball = () => {
   const [currentPlayer, setCurrentPlayer] = useState(1);
@@ -20,6 +33,11 @@ const DiceFootball = () => {
   const [remainingDice, setRemainingDice] = useState(2);
   const [dicePositions, setDicePositions] = useState<DicePosition[]>([]);
   const [lastRollResult, setLastRollResult] = useState('');
+  const [gestureState, setGestureState] = useState<GestureState>({
+    startY: 0,
+    startTime: 0,
+    isDragging: false
+  });
 
   const getDiceIcon = (value: number) => {
     const props = { size: 32, className: "text-slate-700" };
@@ -34,40 +52,84 @@ const DiceFootball = () => {
     }
   };
 
-  const rollDice = () => {
-    if (rolling || remainingDice === 0) return;
+  const calculateRollResult = (velocity: number): RollResult => {
+    const normalizedVelocity = Math.min(Math.abs(velocity), 3) / 3;
     
-    setRolling(true);
+    let landingZone: RollResult['landingZone'];
+    let distance: number;
+    
+    if (normalizedVelocity < 0.3) {
+      landingZone = 'short';
+      distance = normalizedVelocity * 150 + Math.random() * 50;
+    } else if (normalizedVelocity > 0.8) {
+      landingZone = 'off';
+      distance = 450;
+    } else if (normalizedVelocity > 0.6 && normalizedVelocity < 0.8) {
+      if (Math.random() < 0.15) {
+        landingZone = 'touchdown';
+        distance = 330;
+      } else {
+        landingZone = 'endzone';
+        distance = 300 + Math.random() * 40;
+      }
+    } else {
+      landingZone = 'field';
+      distance = normalizedVelocity * 200 + Math.random() * 100;
+    }
+
+    return {
+      velocity: normalizedVelocity,
+      distance,
+      landingZone
+    };
+  };
+
+  const handleGestureStart = (clientY: number) => {
+    if (!rolling && remainingDice > 0) {
+      setGestureState({
+        startY: clientY,
+        startTime: Date.now(),
+        isDragging: true
+      });
+    }
+  };
+
+  const handleGestureEnd = (clientY: number) => {
+    if (!gestureState.isDragging || rolling || remainingDice === 0) {
+      return;
+    }
+
+    const endTime = Date.now();
+    const duration = endTime - gestureState.startTime;
+    const distance = gestureState.startY - clientY;
+    
+    // Calculate velocity and adjust for player direction
+    let velocity = distance / duration;
+    if (currentPlayer === 2) {
+      velocity = -velocity; // Invert for bottom player
+    }
+    
+    setGestureState({
+      startY: 0,
+      startTime: 0,
+      isDragging: false
+    });
+
+    rollDiceWithPower(velocity);
+  };
+
+  const rollDiceWithPower = (velocity: number) => {
+    const rollResult = calculateRollResult(velocity);
     const newDice = Math.floor(Math.random() * 6) + 1;
     const isTopPlayer = currentPlayer === 1;
     
-    const rollPower = Math.random();
     const startX = Math.random() * 100 - 50;
     const startY = isTopPlayer ? 30 : 350;
-    
-    let finalY, landingZone;
-    if (rollPower > 0.8) {
-      finalY = isTopPlayer ? 450 : -50; // Off table
-      landingZone = 'off';
-    } else if (rollPower > 0.5) {
-      finalY = isTopPlayer ? 
-        (Math.random() * 160 + 180) : // Bottom half of field
-        (Math.random() * 160 + 40);   // Top half of field
-      landingZone = 'field';
-    } else {
-      if (Math.random() < 0.2) {
-        finalY = isTopPlayer ? 330 : 50; // Touchdown
-        landingZone = 'touchdown';
-      } else {
-        finalY = isTopPlayer ?
-          (Math.random() * 40 + 300) : // Bottom endzone
-          (Math.random() * 40 + 20);   // Top endzone
-        landingZone = 'endzone';
-      }
-    }
-
     const finalX = startX + (Math.random() * 200 - 100);
+    const finalY = isTopPlayer ? rollResult.distance : (380 - rollResult.distance);
 
+    setRolling(true);
+    
     const newPosition = {
       value: newDice,
       startX,
@@ -75,7 +137,8 @@ const DiceFootball = () => {
       finalX,
       finalY,
       isRolling: true,
-      landingZone
+      landingZone: rollResult.landingZone,
+      velocity: rollResult.velocity
     };
 
     setDicePositions(prev => [...prev, newPosition]);
@@ -84,20 +147,22 @@ const DiceFootball = () => {
       setRolling(false);
       setRemainingDice(prev => prev - 1);
       
-      if (landingZone === 'touchdown') {
+      if (rollResult.landingZone === 'touchdown') {
         setScores(prev => ({
           ...prev,
-          [currentPlayer === 1 ? 'player1' : 'player2']: prev[currentPlayer === 1 ? 'player1' : 'player2'] + 7
+          [`player${currentPlayer}`]: prev[`player${currentPlayer}`] + 7
         }));
         setLastRollResult('TOUCHDOWN! +7 points');
-      } else if (landingZone === 'endzone') {
+      } else if (rollResult.landingZone === 'endzone') {
         setScores(prev => ({
           ...prev,
-          [currentPlayer === 1 ? 'player1' : 'player2']: prev[currentPlayer === 1 ? 'player1' : 'player2'] + newDice
+          [`player${currentPlayer}`]: prev[`player${currentPlayer}`] + newDice
         }));
         setLastRollResult(`In the endzone! +${newDice} points`);
-      } else if (landingZone === 'off') {
+      } else if (rollResult.landingZone === 'off') {
         setLastRollResult('Off the table!');
+      } else if (rollResult.landingZone === 'short') {
+        setLastRollResult('Roll harder!');
       } else {
         setLastRollResult('On the field');
       }
@@ -134,7 +199,14 @@ const DiceFootball = () => {
         )}
       </div>
 
-      <div className="relative bg-green-600 rounded-xl p-8 mb-8 h-96 overflow-hidden">
+      <div 
+        className="relative bg-green-600 rounded-xl p-8 mb-8 h-96 overflow-hidden"
+        onTouchStart={(e) => handleGestureStart(e.touches[0].clientY)}
+        onTouchEnd={(e) => handleGestureEnd(e.changedTouches[0].clientY)}
+        onMouseDown={(e) => handleGestureStart(e.clientY)}
+        onMouseUp={(e) => handleGestureEnd(e.clientY)}
+        onMouseLeave={(e) => gestureState.isDragging && handleGestureEnd(e.clientY)}
+      >
         <div className="absolute top-2 left-2 right-2 h-20 border-2 border-white rounded opacity-50">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 border-2 border-white transform rotate-45" />
         </div>
@@ -149,7 +221,7 @@ const DiceFootball = () => {
           {dicePositions.map((dice, index) => (
             <div
               key={index}
-              className="absolute bg-white p-2 rounded-lg shadow-lg dice"
+              className={`absolute bg-white p-2 rounded-lg shadow-lg dice ${gestureState.isDragging ? 'dragging' : ''}`}
               style={{
                 left: '50%',
                 top: 0,
@@ -157,28 +229,23 @@ const DiceFootball = () => {
                 '--start-y': `${dice.startY}px`,
                 '--end-x': `${dice.finalX}px`,
                 '--end-y': `${dice.finalY}px`,
+                '--velocity': dice.velocity,
                 transform: `translate(-50%, 0) translate(${dice.startX}px, ${dice.startY}px)`,
-                animation: `${dice.landingZone === 'off' ? 'rollOff' : 'rollAcross'} 2s forwards`
-              } as React.CSSProperties}
+                animation: `${dice.landingZone === 'off' ? 'rollOff' : 'rollAcross'} ${2 / dice.velocity}s forwards`
+              }}
             >
               {getDiceIcon(dice.value)}
             </div>
           ))}
+          
+          {!rolling && remainingDice > 0 && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-white text-opacity-50 text-lg">
+                {currentPlayer === 1 ? "↓ Flick down to roll ↓" : "↑ Flick up to roll ↑"}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
-
-      <div className="text-center">
-        <button
-          onClick={rollDice}
-          disabled={rolling || remainingDice === 0}
-          className={`px-6 py-3 rounded-full text-white font-bold text-lg shadow-lg
-            ${rolling || remainingDice === 0 
-              ? 'bg-gray-400' 
-              : 'bg-green-500 hover:bg-green-600 active:bg-green-700'
-            }`}
-        >
-          {rolling ? 'Rolling...' : `Roll Dice (${remainingDice} left)`}
-        </button>
       </div>
     </div>
   );
