@@ -3,15 +3,25 @@
 import React, { useState } from 'react';
 import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from 'lucide-react';
 
+interface DicePosition {
+  value: number;
+  startX: number;
+  startY: number;
+  finalX: number;
+  finalY: number;
+  isRolling: boolean;
+  landingZone: string;
+}
+
 const DiceFootball = () => {
   const [currentPlayer, setCurrentPlayer] = useState(1);
   const [scores, setScores] = useState({ player1: 0, player2: 0 });
   const [rolling, setRolling] = useState(false);
   const [remainingDice, setRemainingDice] = useState(2);
-  const [dicePositions, setDicePositions] = useState([]);
+  const [dicePositions, setDicePositions] = useState<DicePosition[]>([]);
   const [lastRollResult, setLastRollResult] = useState('');
 
-  const getDiceIcon = (value) => {
+  const getDiceIcon = (value: number) => {
     const props = { size: 32, className: "text-slate-700" };
     switch(value) {
       case 1: return <Dice1 {...props} />;
@@ -77,13 +87,13 @@ const DiceFootball = () => {
       if (landingZone === 'touchdown') {
         setScores(prev => ({
           ...prev,
-          [`player${currentPlayer}`]: prev[`player${currentPlayer}`] + 7
+          [currentPlayer === 1 ? 'player1' : 'player2']: prev[currentPlayer === 1 ? 'player1' : 'player2'] + 7
         }));
         setLastRollResult('TOUCHDOWN! +7 points');
       } else if (landingZone === 'endzone') {
         setScores(prev => ({
           ...prev,
-          [`player${currentPlayer}`]: prev[`player${currentPlayer}`] + newDice
+          [currentPlayer === 1 ? 'player1' : 'player2']: prev[currentPlayer === 1 ? 'player1' : 'player2'] + newDice
         }));
         setLastRollResult(`In the endzone! +${newDice} points`);
       } else if (landingZone === 'off') {
