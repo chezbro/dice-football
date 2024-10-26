@@ -210,15 +210,15 @@ const DiceFootball = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4 bg-gradient-to-b from-green-100 to-green-200 rounded-xl">
-      <div className="text-center mb-8">
+    <div className="w-full h-screen flex flex-col bg-gradient-to-b from-green-100 to-green-200">
+      <div className="text-center p-4">
         <h1 className="text-3xl font-bold text-green-800 mb-4">Dice Football</h1>
         <div className="flex justify-around mb-4">
-          <div className={`p-4 rounded-lg ${currentPlayer === 1 ? 'bg-green-500 text-white' : 'bg-green-200'}`}>
+          <div className={`p-2 rounded-lg ${currentPlayer === 1 ? 'bg-green-500 text-white' : 'bg-green-200'}`}>
             <p className="font-bold">Player 1</p>
             <p className="text-2xl">{scores.player1}</p>
           </div>
-          <div className={`p-4 rounded-lg ${currentPlayer === 2 ? 'bg-green-500 text-white' : 'bg-green-200'}`}>
+          <div className={`p-2 rounded-lg ${currentPlayer === 2 ? 'bg-green-500 text-white' : 'bg-green-200'}`}>
             <p className="font-bold">Player 2</p>
             <p className="text-2xl">{scores.player2}</p>
           </div>
@@ -231,21 +231,21 @@ const DiceFootball = () => {
       </div>
 
       <div 
-        className="relative bg-green-600 rounded-xl p-8 mb-8 h-96 overflow-hidden touch-none"
+        className="relative flex-grow bg-green-600 overflow-hidden touch-none"
         onTouchStart={(e) => handleGestureStart(e.touches[0].clientY)}
         onTouchEnd={(e) => handleGestureEnd(e.changedTouches[0].clientY)}
         onMouseDown={(e) => handleGestureStart(e.clientY)}
         onMouseUp={(e) => handleGestureEnd(e.clientY)}
         onMouseLeave={(e) => gestureState.isDragging && handleGestureEnd(e.clientY)}
       >
-        <div className="absolute top-2 left-2 right-2 h-20 border-2 border-white rounded opacity-50">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 border-2 border-white transform rotate-45" />
+        <div className="absolute top-0 left-0 right-0 h-1/6 border-b-2 border-white opacity-50">
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-8 h-8 border-2 border-white transform rotate-45" />
         </div>
         
-        <div className="absolute top-1/2 left-2 right-2 h-px bg-white opacity-50" />
+        <div className="absolute top-1/2 left-0 right-0 h-px bg-white opacity-50" />
         
-        <div className="absolute bottom-2 left-2 right-2 h-20 border-2 border-white rounded opacity-50">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 border-2 border-white transform rotate-45" />
+        <div className="absolute bottom-0 left-0 right-0 h-1/6 border-t-2 border-white opacity-50">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 border-2 border-white transform rotate-45" />
         </div>
         
         <div className="relative w-full h-full perspective-1000">
@@ -257,11 +257,11 @@ const DiceFootball = () => {
                 left: '50%',
                 top: 0,
                 '--start-x': `${dice.startX}px`,
-                '--start-y': `${dice.startY}px`,
+                '--start-y': `${dice.startY}%`,
                 '--end-x': `${dice.finalX}px`,
-                '--end-y': `${dice.finalY}px`,
+                '--end-y': `${dice.finalY}%`,
                 '--velocity': dice.velocity,
-                transform: `translate(-50%, 0) translate(${dice.startX}px, ${dice.startY}px)`,
+                transform: `translate(-50%, 0) translate(${dice.startX}px, ${dice.startY}%)`,
                 animation: `${dice.landingZone === 'off' ? 'rollOff' : 'rollAcross'} ${2 / dice.velocity}s forwards`
               } as React.CSSProperties}
             >
