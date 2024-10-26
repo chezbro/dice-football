@@ -2,20 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+.perspective-1000 {
+  perspective: 1000px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.dice {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+@keyframes rollAcross {
+  0% {
+    transform: translate(-50%, 0) translate(var(--start-x), var(--start-y)) rotateX(0deg) rotateZ(0deg);
+  }
+  25% {
+    transform: translate(-50%, 0) 
+              translate(calc(var(--start-x) * 0.75 + var(--end-x) * 0.25), 
+                      calc(var(--start-y) * 0.75 + var(--end-y) * 0.25 - 40px)) 
+              rotateX(180deg) rotateZ(90deg);
+  }
+  50% {
+    transform: translate(-50%, 0) 
+              translate(calc(var(--start-x) * 0.5 + var(--end-x) * 0.5), 
+                      calc(var(--start-y) * 0.5 + var(--end-y) * 0.5 - 20px)) 
+              rotateX(360deg) rotateZ(180deg);
+  }
+  75% {
+    transform: translate(-50%, 0) 
+              translate(calc(var(--start-x) * 0.25 + var(--end-x) * 0.75), 
+                      calc(var(--start-y) * 0.25 + var(--end-y) * 0.75 - 10px)) 
+              rotateX(540deg) rotateZ(270deg);
+  }
+  100% {
+    transform: translate(-50%, 0) 
+              translate(var(--end-x), var(--end-y)) 
+              rotateX(720deg) rotateZ(360deg);
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes rollOff {
+  0% {
+    transform: translate(-50%, 0) translate(var(--start-x), var(--start-y)) rotateX(0deg) rotateZ(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 0) translate(var(--end-x), var(--end-y)) rotateX(720deg) rotateZ(360deg);
+    opacity: 0;
+  }
 }
