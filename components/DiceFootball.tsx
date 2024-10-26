@@ -26,9 +26,14 @@ type DicePosition = {
   velocity: number;
 };
 
+type Scores = {
+  player1: number;
+  player2: number;
+};
+
 const DiceFootball = () => {
   const [currentPlayer, setCurrentPlayer] = useState(1);
-  const [scores, setScores] = useState({ player1: 0, player2: 0 });
+  const [scores, setScores] = useState<Scores>({ player1: 0, player2: 0 });
   const [rolling, setRolling] = useState(false);
   const [remainingDice, setRemainingDice] = useState(2);
   const [dicePositions, setDicePositions] = useState<DicePosition[]>([]);
@@ -148,16 +153,22 @@ const DiceFootball = () => {
       setRemainingDice(prev => prev - 1);
       
       if (rollResult.landingZone === 'touchdown') {
-        setScores(prev => ({
-          ...prev,
-          [`player${currentPlayer}`]: prev[`player${currentPlayer}`] + 7
-        }));
+        setScores(prev => {
+          const playerKey = `player${currentPlayer}` as keyof Scores;
+          return {
+            ...prev,
+            [playerKey]: prev[playerKey] + 7
+          };
+        });
         setLastRollResult('TOUCHDOWN! +7 points');
       } else if (rollResult.landingZone === 'endzone') {
-        setScores(prev => ({
-          ...prev,
-          [`player${currentPlayer}`]: prev[`player${currentPlayer}`] + newDice
-        }));
+        setScores(prev => {
+          const playerKey = `player${currentPlayer}` as keyof Scores;
+          return {
+            ...prev,
+            [playerKey]: prev[playerKey] + newDice
+          };
+        });
         setLastRollResult(`In the endzone! +${newDice} points`);
       } else if (rollResult.landingZone === 'off') {
         setLastRollResult('Off the table!');
