@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from 'lucide-react';
 
 type GestureState = {
@@ -96,6 +96,8 @@ const DiceFootball = () => {
         startTime: Date.now(),
         isDragging: true
       });
+      document.body.style.overflow = 'hidden';
+      document.addEventListener('touchmove', preventScroll, { passive: false });
     }
   };
 
@@ -103,6 +105,9 @@ const DiceFootball = () => {
     if (!gestureState.isDragging || rolling || remainingDice === 0) {
       return;
     }
+
+    document.body.style.overflow = '';
+    document.removeEventListener('touchmove', preventScroll);
 
     const endTime = Date.now();
     const duration = endTime - gestureState.startTime;
@@ -189,6 +194,21 @@ const DiceFootball = () => {
     }, 2000);
   };
 
+  useEffect(() => {
+    const preventScroll = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('touchmove', preventScroll);
+    };
+  }, []);
+
+  const preventScroll = (e: TouchEvent) => {
+    e.preventDefault();
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-4 bg-gradient-to-b from-green-100 to-green-200 rounded-xl">
       <div className="text-center mb-8">
@@ -211,7 +231,7 @@ const DiceFootball = () => {
       </div>
 
       <div 
-        className="relative bg-green-600 rounded-xl p-8 mb-8 h-96 overflow-hidden"
+        className="relative bg-green-600 rounded-xl p-8 mb-8 h-96 overflow-hidden touch-none"
         onTouchStart={(e) => handleGestureStart(e.touches[0].clientY)}
         onTouchEnd={(e) => handleGestureEnd(e.changedTouches[0].clientY)}
         onMouseDown={(e) => handleGestureStart(e.clientY)}
